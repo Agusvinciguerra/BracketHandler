@@ -7,7 +7,7 @@ public class Brackets : MonoBehaviour
 {
     [SerializeField] private GameObject inputFieldPrefab; // Prefab for InputField
     [SerializeField] private Transform inputFieldParent; // Parent container for InputFields
-    [SerializeField] private Transform inputFieldParent2; // Parent container for InputFields
+    [SerializeField] private Transform[] inputFieldParents; // Parent container for InputFields
 
     private string filePath; // Path to the JSON file
 
@@ -33,8 +33,56 @@ public class Brackets : MonoBehaviour
         Debug.Log("JSON file path: " + filePath);
 
         LoadFromJson();
-        InstantiateInputFields();
-        InstantiateHalfInputFields();
+        CheckPlayerCount();
+    }
+
+    void CheckPlayerCount()
+    {
+        switch (playerDataList.players.Count)
+        {
+            case int n when n >= 0 && n < 8:
+                Debug.Log("Menos de 8 jugadores. No se puede iniciar el torneo.");
+                break;
+
+            case int n when n == 8:
+                InstantiateInputFields(8);
+                StartBracket(8);
+                break;
+
+            case int n when n >= 9 && n < 16:
+                InstantiateInputFields(8);
+                StartBracket(8);
+                break;
+
+            case int n when n == 16:
+                InstantiateInputFields(16);
+                StartBracket(16);
+                break;
+
+            case int n when n >= 17 && n < 32:
+                InstantiateInputFields(16);
+                StartBracket(16);
+                break;
+            
+            case int n when n == 32:
+                InstantiateInputFields(32);
+                StartBracket(32);
+                break;
+
+            case int n when n >= 33 && n < 64:
+                InstantiateInputFields(32);
+                StartBracket(32);
+                break;
+            
+            case int n when n == 64:
+                InstantiateInputFields(64);
+                StartBracket(64);
+                break;
+
+            default:
+                Debug.Log("Número de jugadores fuera de los rangos manejados.");
+                break;
+        }
     }
 
     void LoadFromJson()
@@ -51,7 +99,7 @@ public class Brackets : MonoBehaviour
         }
     }
 
-    void InstantiateInputFields()
+    void InstantiateInputFields(int count)
     {
         // Clear existing InputFields (optional, to avoid duplicates)
         foreach (Transform child in inputFieldParent)
@@ -59,8 +107,8 @@ public class Brackets : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        // Instantiate an InputField for each player alias
-        foreach (var player in playerDataList.players)
+        // Instantiate an InputField for the specified number of players
+        for (int i = 0; i < count && i < playerDataList.players.Count; i++)
         {
             GameObject newInputField = Instantiate(inputFieldPrefab, inputFieldParent);
             newInputField.SetActive(true);
@@ -69,36 +117,100 @@ public class Brackets : MonoBehaviour
             TMP_InputField inputField = newInputField.GetComponent<TMP_InputField>();
             if (inputField != null)
             {
-                inputField.text = player.alias; // Set alias as default text
+                inputField.text = playerDataList.players[i].alias; // Set alias as default text
             }
         }
+
+        Debug.Log($"Instanciados {count} InputFields.");
     }
 
-    void InstantiateHalfInputFields()
+    void InstantiateHalfInputFields(int players, int divisor, int index)
     {
-        // Calcular la mitad de los jugadores (redondeando hacia abajo si es impar)
-        int halfCount = playerDataList.players.Count / 2;
+        int halfCount = players / divisor;
 
-        // Limpiar los InputFields existentes (opcional, para evitar duplicados)
-        foreach (Transform child in inputFieldParent2)
+        foreach (Transform child in inputFieldParents[index])
         {
             Destroy(child.gameObject);
         }
 
-        // Instanciar un InputField para la mitad de los jugadores
         for (int i = 0; i < halfCount; i++)
         {
-            GameObject newInputField = Instantiate(inputFieldPrefab, inputFieldParent2);
+            GameObject newInputField = Instantiate(inputFieldPrefab, inputFieldParents[index]);
             newInputField.SetActive(true);
-
-            // Configurar el texto del InputField con el alias del jugador
-            TMP_InputField inputField = newInputField.GetComponent<TMP_InputField>();
-            if (inputField != null)
-            {
-                inputField.text = playerDataList.players[i].alias; // Establecer el alias como texto predeterminado
-            }
         }
+    }
 
-        Debug.Log($"Instanciados {halfCount} InputFields (mitad de los jugadores).");
+    void StartBracket(int playerTrigger)
+    {
+        switch (playerTrigger)
+        {
+            case 8:
+                foreach (Transform parent in inputFieldParents)
+                {
+                    parent.gameObject.SetActive(false);
+                }
+
+                inputFieldParents[0].gameObject.SetActive(true);
+                inputFieldParents[1].gameObject.SetActive(true);
+
+                InstantiateHalfInputFields(8, 2, 0);
+                InstantiateHalfInputFields(8, 4, 1);
+                break;
+
+            case 16:
+                foreach (Transform parent in inputFieldParents)
+                {
+                    parent.gameObject.SetActive(false);
+                }
+
+                inputFieldParents[0].gameObject.SetActive(true);
+                inputFieldParents[1].gameObject.SetActive(true);
+                inputFieldParents[2].gameObject.SetActive(true);
+
+                InstantiateHalfInputFields(16, 2, 0);
+                InstantiateHalfInputFields(16, 4, 1);
+                InstantiateHalfInputFields(16, 8, 2);
+                break;
+
+            case 32:
+                foreach (Transform parent in inputFieldParents)
+                {
+                    parent.gameObject.SetActive(false);
+                }
+
+                inputFieldParents[0].gameObject.SetActive(true);
+                inputFieldParents[1].gameObject.SetActive(true);
+                inputFieldParents[2].gameObject.SetActive(true);
+                inputFieldParents[3].gameObject.SetActive(true);
+
+                InstantiateHalfInputFields(32, 2, 0);
+                InstantiateHalfInputFields(32, 4, 1);
+                InstantiateHalfInputFields(32, 8, 2);
+                InstantiateHalfInputFields(32, 16, 3);
+                break;
+
+            case 64:
+                foreach (Transform parent in inputFieldParents)
+                {
+                    parent.gameObject.SetActive(false);
+                }
+
+                inputFieldParents[0].gameObject.SetActive(true);
+                inputFieldParents[1].gameObject.SetActive(true);
+                inputFieldParents[2].gameObject.SetActive(true);
+                inputFieldParents[3].gameObject.SetActive(true);
+                inputFieldParents[4].gameObject.SetActive(true);
+
+                InstantiateHalfInputFields(64, 2, 0);
+                InstantiateHalfInputFields(64, 4, 1);
+                InstantiateHalfInputFields(64, 8, 2);
+                InstantiateHalfInputFields(64, 16, 3);
+                InstantiateHalfInputFields(64, 32, 4);
+                break;
+
+            default:
+                Debug.LogWarning("Número de jugadores no válido para iniciar el bracket.");
+                break;
+        }
     }
 }

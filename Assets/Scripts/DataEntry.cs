@@ -35,13 +35,13 @@ public class DataEntry : MonoBehaviour
 
     private string filePath;
 
-    void Start()
+    void OnEnable()
     {
         filePath = Path.Combine(Application.persistentDataPath, "formData.json");
         Debug.Log("File path: " + filePath);
 
         LoadFromJson();
-        DisplayPlayerAlias();
+        DisplayInfo();
     }
 
     void LoadFromJson()
@@ -72,7 +72,7 @@ public class DataEntry : MonoBehaviour
         lastNameInputField.text = "";
         aliasInputField.text = "";
 
-        DisplayPlayerAlias();
+        DisplayInfo();
     }
 
     void AddPlayerData(string nameInput, string lastNameInput, string aliasInput)
@@ -104,28 +104,49 @@ public class DataEntry : MonoBehaviour
         {
             Debug.LogWarning("Índice no válido en DataEntry.");
         }
+
+        DisplayInfo();
     }
 
-    void DisplayPlayerAlias()
+    public void DisplayInfo()
     {
-        if (File.Exists(filePath))
+        switch (playerDataList.players.Count)
         {
-            string jsonData = File.ReadAllText(filePath);
+            case int n when n >= 0 && n < 8:
+                displayText.text = "Players en lista de espera hasta completar 8";
+                break;
 
-            PlayerDataList playerDataList = JsonUtility.FromJson<PlayerDataList>(jsonData);
+            case int n when n == 8:
+                displayText.text = "Octavos completos. Players en lista de espera hasta completar 16";
+                break;
 
-            string formattedData = "";
-            for (int i = playerDataList.players.Count - 1; i >= 0; i--)
-            {
-                formattedData += $"{playerDataList.players[i].alias}\n";
-            }
+            case int n when n >= 9 && n < 16:
+                displayText.text = "Octavos completos. Players en lista de espera hasta completar 16";
+                break;
 
-            displayText.text = formattedData.TrimEnd();
-        }
-        else
-        {
-            displayText.text = "No player data found.";
-            Debug.LogWarning("No JSON file found.");
+            case int n when n == 16:
+                displayText.text = "16avos completos. Players en lista de espera hasta completar 32";
+                break;
+
+            case int n when n >= 17 && n < 32:
+                displayText.text = "16avos completos. Players en lista de espera hasta completar 32";
+                break;
+            
+            case int n when n == 32:
+                displayText.text = "32avos completos. Players en lista de espera hasta completar 64";
+                break;
+
+            case int n when n >= 33 && n < 64:
+                displayText.text = "32avos completos. Players en lista de espera hasta completar 64";
+                break;
+            
+            case int n when n == 64:
+                displayText.text = "Torneo completo!";
+                break;
+
+            default:
+                Debug.Log("Número de jugadores fuera de los rangos manejados.");
+                break;
         }
     }
 }
