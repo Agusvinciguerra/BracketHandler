@@ -1,15 +1,16 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using System.Linq;
 using TMPro;
 
 public class Brackets : MonoBehaviour
 {
-    [SerializeField] private GameObject inputFieldPrefab; // Prefab for InputField
-    [SerializeField] private Transform inputFieldParent; // Parent container for InputFields
-    [SerializeField] private Transform[] inputFieldParents; // Parent container for InputFields
+    [SerializeField] private GameObject inputFieldPrefab;
+    [SerializeField] private Transform inputFieldParent; 
+    [SerializeField] private Transform[] inputFieldParents;
 
-    private string filePath; // Path to the JSON file
+    private string filePath; 
 
     [System.Serializable]
     public class PlayerData
@@ -26,10 +27,17 @@ public class Brackets : MonoBehaviour
     }
 
     private PlayerDataList playerDataList = new PlayerDataList();
+    public int playersSent;
 
     void OnEnable()
     {
-        filePath = Path.Combine(Application.persistentDataPath, "formData.json");
+        //filePath = Path.Combine(Application.persistentDataPath, "formData.json");
+
+        // Obtiene el nombre guardado por el usuario, o usa "formData" si no hay ninguno
+        string fileName = PlayerPrefs.HasKey("SavedFileName")
+            ? PlayerPrefs.GetString("SavedFileName")
+            : "formData";
+        filePath = Path.Combine(Application.persistentDataPath, fileName + ".json");
         Debug.Log("JSON file path: " + filePath);
 
         LoadFromJson();
@@ -91,7 +99,6 @@ public class Brackets : MonoBehaviour
         {
             string jsonData = File.ReadAllText(filePath);
             playerDataList = JsonUtility.FromJson<PlayerDataList>(jsonData);
-            Debug.Log($"Loaded {playerDataList.players.Count} players from JSON.");
         }
         else
         {
@@ -101,27 +108,22 @@ public class Brackets : MonoBehaviour
 
     void InstantiateInputFields(int count)
     {
-        // Clear existing InputFields (optional, to avoid duplicates)
         foreach (Transform child in inputFieldParent)
         {
             Destroy(child.gameObject);
         }
 
-        // Instantiate an InputField for the specified number of players
         for (int i = 0; i < count && i < playerDataList.players.Count; i++)
         {
             GameObject newInputField = Instantiate(inputFieldPrefab, inputFieldParent);
             newInputField.SetActive(true);
 
-            // Set the InputField's text to the player's alias
             TMP_InputField inputField = newInputField.GetComponent<TMP_InputField>();
             if (inputField != null)
             {
-                inputField.text = playerDataList.players[i].alias; // Set alias as default text
+                inputField.text = playerDataList.players[i].alias;
             }
         }
-
-        Debug.Log($"Instanciados {count} InputFields.");
     }
 
     void InstantiateHalfInputFields(int players, int divisor, int index)
@@ -155,6 +157,8 @@ public class Brackets : MonoBehaviour
 
                 InstantiateHalfInputFields(8, 2, 0);
                 InstantiateHalfInputFields(8, 4, 1);
+
+                playersSent = 8;
                 break;
 
             case 16:
@@ -170,6 +174,8 @@ public class Brackets : MonoBehaviour
                 InstantiateHalfInputFields(16, 2, 0);
                 InstantiateHalfInputFields(16, 4, 1);
                 InstantiateHalfInputFields(16, 8, 2);
+
+                playersSent = 16;
                 break;
 
             case 32:
@@ -187,6 +193,8 @@ public class Brackets : MonoBehaviour
                 InstantiateHalfInputFields(32, 4, 1);
                 InstantiateHalfInputFields(32, 8, 2);
                 InstantiateHalfInputFields(32, 16, 3);
+
+                playersSent = 32;
                 break;
 
             case 64:
@@ -206,11 +214,34 @@ public class Brackets : MonoBehaviour
                 InstantiateHalfInputFields(64, 8, 2);
                 InstantiateHalfInputFields(64, 16, 3);
                 InstantiateHalfInputFields(64, 32, 4);
+
+                playersSent = 64;
                 break;
 
             default:
                 Debug.LogWarning("Número de jugadores no válido para iniciar el bracket.");
                 break;
         }
+    }
+
+    public void TrimAndSavePlayers()
+    {
+        if (playerDataList.players.Count > playersSent)
+        {
+            playerDataList.players = playerDataList.players.Take(playersSent).ToList();
+        }
+        else
+        {
+            Debug.Log("No trimming needed, player count is within limit.");
+        }
+
+        // Usa el mismo nombre personalizado para guardar el archivo recortado
+        string fileName = PlayerPrefs.HasKey("SavedFileName")
+            ? PlayerPrefs.GetString("SavedFileName")
+            : "TournamentStarted";
+        string tournamentFilePath = Path.Combine(Application.persistentDataPath, fileName + "T.json");
+        string jsonData = JsonUtility.ToJson(playerDataList, true);
+        File.WriteAllText(tournamentFilePath, jsonData);
+        Debug.Log("Player data saved to: " + tournamentFilePath);
     }
 }

@@ -31,7 +31,12 @@ public class ShowPlayer : MonoBehaviour
 
     void OnEnable()
     {
-        filePath = Path.Combine(Application.persistentDataPath, "formData.json");
+        //filePath = Path.Combine(Application.persistentDataPath, "formData.json");
+
+        string fileName = PlayerPrefs.HasKey("SavedFileName")
+            ? PlayerPrefs.GetString("SavedFileName")
+            : "formData";
+        filePath = Path.Combine(Application.persistentDataPath, fileName + ".json");
 
         LoadAndDisplayPlayerName();
         LoadAndDisplayPlayerAlias();
