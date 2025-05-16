@@ -40,8 +40,8 @@ public class DataEntry : MonoBehaviour
     void OnEnable()
     {
         //filePath = Path.Combine(Application.persistentDataPath, "formData.json");
-
-        if (PlayerPrefs.HasKey("SavedFileName"))
+        // DEPRECATED //
+        /*if (PlayerPrefs.HasKey("SavedFileName"))
         {
             string savedName = PlayerPrefs.GetString("SavedFileName");
             fileNameInputField.text = savedName;
@@ -64,7 +64,17 @@ public class DataEntry : MonoBehaviour
         Debug.Log("File path: " + filePath);
 
         LoadFromJson();
-        DisplayInfo();
+        DisplayInfo();*/ 
+
+        if (fileNameInputField != null)
+            fileNameInputField.text = ""; // Limpia el campo
+
+        if (fileNameInputContainer != null)
+            fileNameInputContainer.SetActive(true); // Muestra el contenedor
+
+        fileNameDisplayText.text = "Torneo: ";
+
+        Debug.Log("Esperando nombre de torneo...");
     }
 
     void LoadFromJson()
@@ -85,7 +95,8 @@ public class DataEntry : MonoBehaviour
 
     public void ConfirmFileName()
     {
-        string fileName = fileNameInputField.text;
+        // DEPRECATED //
+        /*string fileName = fileNameInputField.text;
         if (!string.IsNullOrWhiteSpace(fileName))
         {
             PlayerPrefs.SetString("SavedFileName", fileName);
@@ -95,6 +106,27 @@ public class DataEntry : MonoBehaviour
                 fileNameInputContainer.SetActive(false); // Desactiva el contenedor
             Debug.Log("File name confirmed and input container disabled.");
             fileNameDisplayText.text = "Torneo: " + fileName;
+        }
+        else
+        {
+            Debug.LogWarning("File name is empty.");
+        }*/
+
+        string fileName = fileNameInputField.text;
+        if (!string.IsNullOrWhiteSpace(fileName))
+        {
+            // Guarda el nombre como key en PlayerPrefs
+            PlayerPrefs.SetString("SavedFileName", fileName);
+            PlayerPrefs.Save();
+
+            filePath = Path.Combine(Application.persistentDataPath, fileName + ".json");
+            if (fileNameInputContainer != null)
+                fileNameInputContainer.SetActive(false); // Desactiva el contenedor
+            Debug.Log("File name confirmed and input container disabled.");
+            fileNameDisplayText.text = "Torneo: " + fileName;
+
+            LoadFromJson();
+            DisplayInfo();
         }
         else
         {
