@@ -1,19 +1,40 @@
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using TMPro;
 using UnityEngine;
 
 public class Client : MonoBehaviour
 {
     TcpClient client;
     Thread receiveThread;
+    [SerializeField] private TMP_InputField portInput;
+    public int puerto;
 
-    void Start()
+    public void ConnectToServer()
     {
+        // EX START METHOD //
+        /*try
+        {
+            client = new TcpClient("127.0.0.1", puerto);
+            Debug.Log("Client connected to server!");
+            StartReceiveThread();
+        }
+        catch (SocketException ex)
+        {
+            Debug.LogError("Client could not connect to server: " + ex.Message);
+        }*/
+
+        int portToUse = puerto;
+        if (portInput != null && !string.IsNullOrEmpty(portInput.text))
+        {
+            int.TryParse(portInput.text, out portToUse);
+        }
+
         try
         {
-            client = new TcpClient("127.0.0.1", 5005);
-            Debug.Log("Client connected to server!");
+            client = new TcpClient("127.0.0.1", portToUse);
+            Debug.Log("Client connected to server on port: " + portToUse);
             StartReceiveThread();
         }
         catch (SocketException ex)

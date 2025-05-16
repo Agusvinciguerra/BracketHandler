@@ -4,26 +4,43 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
+using TMPro;
 
 public class Server : MonoBehaviour
 {
     private TcpListener server;
     private Thread serverThread;
     private List<TcpClient> clients = new List<TcpClient>();
+    [SerializeField] private int puerto;
+    [SerializeField] private TMP_InputField portInput;
 
-    void Start()
+    /*void Start()
     {
         serverThread = new Thread(StartServer);
         serverThread.IsBackground = true;
         serverThread.Start();
+    }*/
+
+    public void InitializeServer()
+    {
+        int portToUse = puerto;
+        if (portInput != null && !string.IsNullOrEmpty(portInput.text))
+        {
+            int.TryParse(portInput.text, out portToUse);
+        }
+
+        serverThread = new Thread(() => StartServer(portToUse));
+        serverThread.IsBackground = true;
+        serverThread.Start();
     }
 
-    void StartServer()
+    void StartServer(int port)
     {
-        server = new TcpListener(IPAddress.Any, 5005);
+        server = new TcpListener(IPAddress.Any, port);
         server.Start();
-        Debug.Log("Server started on port 5005");
+        Debug.Log("Server started on port " + port);
 
         while (true)
         {
