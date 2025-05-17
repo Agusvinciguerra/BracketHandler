@@ -27,6 +27,7 @@ public class StartTournament : MonoBehaviour
     [SerializeField] private TMPro.TMP_Text parejaDisplayText2;
     [SerializeField] private TMPro.TMP_Text debug;
     [SerializeField] private GameObject[] paneles;
+    private int parejaSecundariaActual = -1;
 
     private List<string> ganadores = new List<string>();
 
@@ -65,16 +66,15 @@ public class StartTournament : MonoBehaviour
         if (parejaActual < parejas.Count)
         {
             parejaDisplayText.text = parejas[parejaActual];
-            SendCouplesToServer();
+            SendCouplesToServer(parejaActual); // Envía la principal
+            parejaSecundariaActual = parejaActual + 1; // Prepara la secundaria
         }
         else
             parejaDisplayText.text = "No hay más parejas.";
 
         // Mostrar la segunda pareja (si existe)
-        if (parejaActual + 1 < parejas.Count)
-        {
-            parejaDisplayText2.text = parejas[parejaActual + 1];
-        }
+        if (parejaSecundariaActual < parejas.Count)
+            parejaDisplayText2.text = parejas[parejaSecundariaActual];
         else
             parejaDisplayText2.text = "";
     }
@@ -98,14 +98,14 @@ public class StartTournament : MonoBehaviour
         }
     }
 
-    public void SendCouplesToServer()
+    public void SendCouplesToServer(int index)
     {
-        if (parejas.Count > 0 && parejaActual < parejas.Count)
+        if (parejas.Count > 0 && index < parejas.Count)
         {
-            string parejaActualStr = parejas[parejaActual];
-            string parejaJson = JsonUtility.ToJson(new Wrapper { parejas = new List<string> { parejaActualStr } });
+            string parejaStr = parejas[index];
+            string parejaJson = JsonUtility.ToJson(new Wrapper { parejas = new List<string> { parejaStr } });
             FindObjectOfType<Client>().SendMessageToServer(parejaJson);
-            Debug.Log("Pareja enviada al servidor: " + parejaActualStr);
+            Debug.Log("Pareja enviada al servidor: " + parejaStr);
         }
     }
 
@@ -113,6 +113,14 @@ public class StartTournament : MonoBehaviour
     public class Wrapper
     {
         public List<string> parejas;
+    }
+
+    public void MostrarYEnviarSegundaPareja()
+    {
+        if (parejaSecundariaActual < parejas.Count)
+        {
+            SendCouplesToServer(parejaSecundariaActual);
+        }
     }
 
     public void SeleccionarGanadorActual(int indice)
